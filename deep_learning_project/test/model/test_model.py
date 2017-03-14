@@ -1,6 +1,7 @@
 import numpy
 import pytest
 
+from dataset import (load_iris)
 from model import (calc_bias_deltas,
         backprop_iteration,
         calc_hidden_error,
@@ -122,3 +123,6 @@ def test_backprop_iteration():
 
     assert uw2.item((0,0)) == pytest.approx(0.09734288136, abs=.00001)
     assert ub2.item((0,0)) == pytest.approx(-1.303792811, abs=.00001)
+
+#def test_train_simple():
+#    data = 
