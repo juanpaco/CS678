@@ -49,3 +49,6 @@ def backprop_iteration(c, i, w1, b1, w2, b2, t, activation=vsigmoid):
             b1 + b1_deltas,
             w2 + w2_deltas,
             b2 + b2_deltas)
+
+#def train(dataset, num_hidden_nodes):
+
