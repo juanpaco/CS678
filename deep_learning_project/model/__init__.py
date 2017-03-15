@@ -4,6 +4,7 @@ from .net import (vsigmoid, vsigmoid_derivative, compute_layer, feed_forward)
 from .train import (calc_hidden_error,
         calc_output_error,
         calc_weight_deltas,
-        calc_bias_deltas,
-        backprop_iteration)
+        compute_errors,
+        backprop_iteration,
+        train)
 

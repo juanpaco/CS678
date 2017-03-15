@@ -10,14 +10,15 @@ def test_load_iris():
     assert data['num_inputs'] == 4
     assert data['num_outputs'] == 3
 
+    assert data['data'][0]['input'].shape == (1,4)
     # Were the target values correct?
     # The iris dataset has categorical output, with 3 different classes
-    assert len(data['data'][0]['output']) == 3
+    assert data['data'][0]['output'].shape == (1,3)
 
     # The first kind of iris should be on
-    assert data['data'][0]['output'][0] == 1
-    assert data['data'][0]['output'][1] == 0
-    assert data['data'][0]['output'][2] == 0
+    assert data['data'][0]['output'].item((0,0)) == 1
+    assert data['data'][0]['output'].item((0,1)) == 0
+    assert data['data'][0]['output'].item((0,2)) == 0
 
     assert data['partitions']['training']
 

@@ -1,5 +1,6 @@
 import csv
 import math
+import numpy
 from os.path import join
 import random
 
@@ -22,10 +23,11 @@ def load_iris(train_percentage=.7, validation_percentage=.2):
             'Iris-virginica': [ 0, 0, 1 ]}
 
     def build_instance(row):
-        input = list(map(float, row[0:3]))
+        input = list(map(float, row[0:4]))
         output = output_map[row[4]]
 
-        return { 'input': input, 'output': output }
+        return { 'input': numpy.matrix([input]),
+                'output': numpy.matrix([output]) }
 
     instances = list(map(build_instance, data))
 

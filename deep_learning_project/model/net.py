@@ -1,3 +1,4 @@
+from functools import (reduce)
 import math
 import numpy
 
@@ -11,20 +12,24 @@ def sigmoid_derivative(val):
 
 vsigmoid_derivative = numpy.vectorize(sigmoid_derivative, otypes=[numpy.float])
 
-def compute_layer(i, w, b, activation=vsigmoid):
+def compute_layer(i, layer, activation=vsigmoid):
     """ activation should be a vectorized function """
 
-    net = i.dot(w) + b
+    net = i.dot(layer['w']) + layer['b']
 
     return activation(net)
 
-def feed_forward(i, w1, b1, w2, b2, activation=vsigmoid):
+def feed_forward(i, net, activation=vsigmoid):
     """ activation should be a vectorized function """
 
-    z1 = compute_layer(i, w1, b1, activation)
-    z2 = compute_layer(z1, w2, b2, activation)
+    def reduce_layer(memo, layer):
+        input = i if len(memo) == 0 else memo[-1]
 
-    return (z1, z2)
+        memo.append(compute_layer(input, layer, activation))
+
+        return memo
+
+    return reduce(reduce_layer, net, [])
 
 def init_net(dataset, layer_sizes):
     complete_layer_sizes = ([dataset['num_inputs']] +
