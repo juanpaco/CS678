@@ -2,7 +2,8 @@ from collections import deque
 from functools import (reduce)
 import numpy
 
-from .net import(feed_forward, init_net, vsigmoid, vsigmoid_derivative)
+from .bootstrap import(random_weights)
+from .net import(feed_forward, vsigmoid, vsigmoid_derivative)
 
 def calc_hidden_error(little_delta_k, z, w, fprime=vsigmoid_derivative):
     return numpy.multiply(little_delta_k.dot(w.T), fprime(z))
@@ -97,14 +98,11 @@ def evaluate_net(dataset, net):
 
     return correct_count / len(dataset['partitions']['validation'])
 
-def train(dataset, layer_sizes, c):
-    epochs = 0
+def train(dataset, layer_sizes, c, epochs):
+    net = random_weights(dataset, layer_sizes)
 
-    net = init_net(dataset, layer_sizes)
-    print('count_correct', evaluate_net(dataset, net))
-
-    for i in range(0,1000):
+    for i in range(0,epochs):
       net = epoch(dataset, net, c)
-      print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
+      #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
 
     return net

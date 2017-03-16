@@ -1,11 +1,8 @@
 import numpy
 import pytest
 
-from dataset import (load_iris)
-from model.net import (compute_layer,
-        feed_forward,
-        init_net,
-        sigmoid)
+from model import (compute_layer, feed_forward)
+from model.net import(sigmoid)
 
 def test_sigmoid():
     assert sigmoid(0) == .5
@@ -51,14 +48,3 @@ def test_another_forward():
 
     assert z1.item((0,0)) == pytest.approx(0.700, abs=.001)
     assert z1.item((0,1)) == pytest.approx(0.807, abs=.001)
-
-def test_init_net():
-    dataset = load_iris()
-
-    net = init_net(dataset, [ 20 ])
-
-    assert net[0]['w'].shape == (4, 20)
-    assert net[0]['b'].shape == (1, 20)
-
-    assert net[1]['w'].shape == (20, 3)
-    assert net[1]['b'].shape == (1, 3)

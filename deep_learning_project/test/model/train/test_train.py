@@ -103,10 +103,11 @@ def test_compute_errors():
 
 def test_train():
     # Let's always get the same conditions
-    #random.seed(0)
-    #numpy.random.seed(1)
+    random.seed(0)
+    numpy.random.seed(1)
 
     dataset = load_iris()
-    res = train(dataset, [ 5 ], .1)
+    res = train(dataset, [ 20 ], .1, 20)
 
-    print('done?')
+    # We're not actually testing anything here.  Just pass it if it runs.  I
+    #   observed good results.  Can add some specific checks later.
