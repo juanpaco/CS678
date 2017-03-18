@@ -9,6 +9,7 @@ from model import (
         calc_output_error,
         calc_weight_deltas,
         compute_errors,
+        evaluate_net,
         feed_forward,
         random_weights,
         stacked_auto_encoder,
@@ -117,6 +118,19 @@ def test_train_auto_encoder():
     numpy.random.seed(1)
 
     dataset = load_iris()
-    net = stacked_auto_encoder(dataset, [ 20 ], .1, 10000)
+    net = stacked_auto_encoder(dataset, [ 20, 20, 20 ], .1, 10000)
+    net2 = random_weights(dataset, [ 20 ])
+    net.append(net2[-1])
+
+    print('net', net)
+    trained_net = train(dataset, net, .1, 10000)
+    trained_net2 = train(dataset, net2, .1, 100)
+
+    print(evaluate_net(dataset, net) * 100)
+    print(evaluate_net(dataset, trained_net) * 100)
+    print(evaluate_net(dataset, trained_net2) * 100)
+
+    #print(trained_net)
+    #print(trained_net2)
 
 

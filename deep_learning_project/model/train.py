@@ -83,7 +83,7 @@ def evaluate_net(dataset, net):
     def compare(actual, target):
         coerced_actual = coerce_output(actual)
 
-        #print(coerced_actual, target.A[0])
+        print(coerced_actual, target.A[0])
 
         return 1 if numpy.array_equal(coerced_actual, target.A[0]) else 0
 
@@ -98,8 +98,10 @@ def evaluate_net(dataset, net):
 
 def train(dataset, net, c, epochs):
     for i in range(0, epochs):
-      print('epoch:', i)
-      net = epoch(dataset, net, c)
-      #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
+        if i % 1000 == 0:
+            print('epoch:', i)
+
+        net = epoch(dataset, net, c)
+        #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
 
     return net

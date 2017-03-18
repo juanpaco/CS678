@@ -79,6 +79,7 @@ def make_prep_sac_layer(dataset, c, epochs):
 
         layers.append(new_net[0])
         
+        print('layer done')
         return layers
 
     return prep_sac_layer

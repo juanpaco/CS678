@@ -6,6 +6,7 @@ from .train import (calc_hidden_error,
         calc_output_error,
         calc_weight_deltas,
         compute_errors,
+        evaluate_net,
         backprop_iteration,
         train)
 
