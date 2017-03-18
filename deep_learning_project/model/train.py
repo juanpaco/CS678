@@ -2,7 +2,6 @@ from collections import deque
 from functools import (reduce)
 import numpy
 
-from .bootstrap import(random_weights)
 from .net import(feed_forward, vsigmoid, vsigmoid_derivative)
 
 def calc_hidden_error(little_delta_k, z, w, fprime=vsigmoid_derivative):
@@ -63,13 +62,12 @@ def backprop_iteration(c, i, net, t, activation=vsigmoid):
     errors = compute_errors(t, zs, net)
     weight_deltas = calc_weight_deltas(c, errors, i, zs, net)
 
-    foo = list(zip(weight_deltas, net))
-
     return [ { 'w': numpy.add(i[0]['w'], i[1]['w']), 'b': numpy.add(i[0]['b'], i[1]['b']) }
         for i in zip(weight_deltas, net) ]
 
 def epoch(dataset, net, c):
     def tick(net, input_index):
+        #print('input', dataset['data'][input_index]['input'], dataset['data'][input_index]['output'], net)
         return backprop_iteration(c,
             dataset['data'][input_index]['input'],
             net,
@@ -98,10 +96,9 @@ def evaluate_net(dataset, net):
 
     return correct_count / len(dataset['partitions']['validation'])
 
-def train(dataset, layer_sizes, c, epochs):
-    net = random_weights(dataset, layer_sizes)
-
-    for i in range(0,epochs):
+def train(dataset, net, c, epochs):
+    for i in range(0, epochs):
+      print('epoch:', i)
       net = epoch(dataset, net, c)
       #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
 

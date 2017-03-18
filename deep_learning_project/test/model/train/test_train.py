@@ -10,6 +10,8 @@ from model import (
         calc_weight_deltas,
         compute_errors,
         feed_forward,
+        random_weights,
+        stacked_auto_encoder,
         train)
 
 # This also uses the network from HW1
@@ -78,10 +80,6 @@ def test_backprop_iteration():
     new_net = backprop_iteration(c, i, net, t)
 
     assert new_net[0]['w'].item((0,0)) == pytest.approx(0.999968, abs=.00001)
-    #assert ub1.item((0,1)) == pytest.approx(0.500474, abs=.00001)
-
-    #assert uw2.item((0,0)) == pytest.approx(0.09734288136, abs=.00001)
-    #assert ub2.item((0,0)) == pytest.approx(-1.303792811, abs=.00001)
 
 def test_compute_errors():
     i = numpy.matrix('0.4 0.9')
@@ -107,7 +105,18 @@ def test_train():
     numpy.random.seed(1)
 
     dataset = load_iris()
-    res = train(dataset, [ 20 ], .1, 20)
+    net = random_weights(dataset, [ 20 ])
+
+    res = train(dataset, net, .1, 1)
 
     # We're not actually testing anything here.  Just pass it if it runs.  I
     #   observed good results.  Can add some specific checks later.
+
+def test_train_auto_encoder():
+    random.seed(0)
+    numpy.random.seed(1)
+
+    dataset = load_iris()
+    net = stacked_auto_encoder(dataset, [ 20 ], .1, 10000)
+
+
