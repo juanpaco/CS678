@@ -1,0 +1,5 @@
+numpy==1.12.0
+pkg-resources==0.0.0
+py==1.4.32
+pytest==3.0.6
+python-mnist==0.3
