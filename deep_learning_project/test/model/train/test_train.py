@@ -2,7 +2,7 @@ import numpy
 import pytest
 import random
 
-from dataset import (load_iris)
+from dataset import (load_iris, load_mnist)
 from model import (
         backprop_iteration,
         calc_hidden_error,
@@ -100,37 +100,35 @@ def test_compute_errors():
     assert errors[0].item((0,0)) == pytest.approx(-0.000079, abs=.00001)
     assert errors[0].item((0,1)) == pytest.approx(0.000469, abs=.0001)
 
-def test_train():
-    # Let's always get the same conditions
-    random.seed(0)
-    numpy.random.seed(1)
-
-    dataset = load_iris()
-    net = random_weights(dataset, [ 20 ])
-
-    res = train(dataset, net, .1, 1)
-
-    # We're not actually testing anything here.  Just pass it if it runs.  I
-    #   observed good results.  Can add some specific checks later.
-
-def test_train_auto_encoder():
-    random.seed(0)
-    numpy.random.seed(1)
-
-    dataset = load_iris()
-    net = stacked_auto_encoder(dataset, [ 20, 20, 20 ], .1, 10000)
-    net2 = random_weights(dataset, [ 20 ])
-    net.append(net2[-1])
-
-    print('net', net)
-    trained_net = train(dataset, net, .1, 10000)
-    trained_net2 = train(dataset, net2, .1, 100)
-
-    print(evaluate_net(dataset, net) * 100)
-    print(evaluate_net(dataset, trained_net) * 100)
-    print(evaluate_net(dataset, trained_net2) * 100)
-
-    #print(trained_net)
-    #print(trained_net2)
-
-
+#def test_train():
+#    # Let's always get the same conditions
+#    random.seed(0)
+#    numpy.random.seed(1)
+#
+#    dataset = load_iris()
+#    net = random_weights(dataset, [ 20 ])
+#
+#    res = train(dataset, net, .1, 1)
+#
+#    # We're not actually testing anything here.  Just pass it if it runs.  I
+#    #   observed good results.  Can add some specific checks later.
+#
+#def test_train_auto_encoder():
+#    random.seed(0)
+#    numpy.random.seed(1)
+#
+#    dataset = load_iris()
+#    net = stacked_auto_encoder(dataset, [ 20, 20, 20 ], .1, 10000)
+#    net2 = random_weights(dataset, [ 20 ])
+#    net.append(net2[-1])
+#
+#    print('net', net)
+#    trained_net = train(dataset, net, .1, 10000)
+#    trained_net2 = train(dataset, net2, .1, 100)
+#
+#    print(evaluate_net(dataset, net) * 100)
+#    print(evaluate_net(dataset, trained_net) * 100)
+#    print(evaluate_net(dataset, trained_net2) * 100)
+#
+#    #print(trained_net)
+#    #print(trained_net2)

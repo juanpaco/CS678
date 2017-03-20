@@ -66,14 +66,28 @@ def backprop_iteration(c, i, net, t, activation=vsigmoid):
         for i in zip(weight_deltas, net) ]
 
 def epoch(dataset, net, c):
-    def tick(net, input_index):
-        #print('input', dataset['data'][input_index]['input'], dataset['data'][input_index]['output'], net)
-        return backprop_iteration(c,
-            dataset['data'][input_index]['input'],
-            net,
-            dataset['data'][input_index]['output'])
+    current_net = net
+#    count = 0
 
-    return reduce(tick, dataset['partitions']['training'], net)
+    for i in dataset['partitions']['training']:
+#        count += 1
+#        print('count:', count)
+        current_net = backprop_iteration(c,
+            dataset['data'][i]['input'],
+            current_net,
+            dataset['data'][i]['output'])
+
+    return current_net
+
+    #def tick(net, input_index):
+    #    #print ('tick:')
+    #    #print('input', dataset['data'][input_index]['input'], dataset['data'][input_index]['output'], net)
+    #    return backprop_iteration(c,
+    #        dataset['data'][input_index]['input'],
+    #        net,
+    #        dataset['data'][input_index]['output'])
+
+    #return reduce(tick, dataset['partitions']['training'], net)
 
 def evaluate_net(dataset, net):
     def coerce_output(output):
@@ -83,7 +97,7 @@ def evaluate_net(dataset, net):
     def compare(actual, target):
         coerced_actual = coerce_output(actual)
 
-        print(coerced_actual, target.A[0])
+    #    print(coerced_actual, target.A[0])
 
         return 1 if numpy.array_equal(coerced_actual, target.A[0]) else 0
 
@@ -97,11 +111,16 @@ def evaluate_net(dataset, net):
     return correct_count / len(dataset['partitions']['validation'])
 
 def train(dataset, net, c, epochs):
+    print('Start training:')
+    print('\ttraining instances:', len(dataset['partitions']['training']))
+    print('\tvalidation instances:', len(dataset['partitions']['validation']))
+    print('\ttest instances:', len(dataset['partitions']['test']))
+
     for i in range(0, epochs):
-        if i % 1000 == 0:
-            print('epoch:', i)
+        #if i % 1000 == 0:
+        #    print('epoch:', i)
 
         net = epoch(dataset, net, c)
-        #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
+        print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
 
     return net

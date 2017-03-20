@@ -1,7 +1,7 @@
 import pytest
 import random
 
-from dataset import (load_iris, partition_list)
+from dataset import (load_iris, load_mnist, partition_list, split_list)
 
 def test_load_iris():
     data = load_iris()
@@ -34,3 +34,27 @@ def test_partition_data():
     assert len(partitioned['validation']) == 20
     assert len(partitioned['test']) == 10
    
+def test_split_list():
+    l = range(0, 100)
+
+    (first, second) = split_list(l, .7)
+
+    assert len(first) == 70
+    assert len(second) == 30
+
+def test_load_test_mnist():
+    mnist = load_mnist()
+
+    assert mnist['num_inputs'] == 28 * 28
+    assert mnist['num_outputs'] == 10
+
+    assert mnist['partitions']['test'][0] == 60000
+    assert max(mnist['partitions']['test']) == 69999
+
+    print('train len', len(mnist['partitions']['training']))
+
+    assert mnist['data'][0]['output'].A[0].tolist().index(1) == 5
+    assert mnist['data'][1]['output'].A[0].tolist().index(1) == 0
+    assert mnist['data'][2]['output'].A[0].tolist().index(1) == 4
+    assert mnist['data'][3]['output'].A[0].tolist().index(1) == 1
+
