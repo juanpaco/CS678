@@ -92,7 +92,7 @@ def load_mnist():
         {
             'input': numpy.matrix(training[0][i]) / 255,
             'output': output_map[training[1][i]],
-        } for i in range(0, 1000) ]#len(training[0])) ]
+        } for i in range(0, 1000)]#len(training[0])) ]
 
     test_instances = [
         {

@@ -15,11 +15,11 @@ def test_init_net():
 
     net = random_weights(dataset, [ 20 ])
 
-    assert net[0]['w'].shape == (4, 20)
-    assert net[0]['b'].shape == (1, 20)
+    assert net[0][0].shape == (4, 20)
+    assert net[0][1].shape == (1, 20)
 
-    assert net[1]['w'].shape == (20, 3)
-    assert net[1]['b'].shape == (1, 3)
+    assert net[1][0].shape == (20, 3)
+    assert net[1][1].shape == (1, 3)
 
 #def test_dataset_to_sac_dataset_with_no_current_net():
 #    random.seed(0)
@@ -50,10 +50,10 @@ def test_dataset_to_sac_dataset_with_a_net():
             'partitions': {} # don't actually need them for this test
             }
 
-    layer = {
-            'w': numpy.matrix('.5 .5 .5; .5 .5 .5; .5 .5 .5'),
-            'b': numpy.matrix('.1 .1 .1'),
-            }
+    layer = (
+            numpy.matrix('.5 .5 .5; .5 .5 .5; .5 .5 .5'),
+            numpy.matrix('.1 .1 .1'),
+            )
 
     current_net = [ layer ]
 
@@ -92,8 +92,8 @@ def test_stacked_auto_encoder():
 
     initial_net = stacked_auto_encoder(dataset, [ 2, 2 ], .1, 1)
 
-    w1 = initial_net[0]['w'].A
-    b1 = initial_net[0]['b'].A
+    w1 = initial_net[0][0].A
+    b1 = initial_net[0][1].A
 
     assert w1[0][0] == pytest.approx(0.02688863491, abs=.000001)
     assert w1[0][1] == pytest.approx(0.1110200495, abs=.000001)
@@ -104,8 +104,8 @@ def test_stacked_auto_encoder():
     assert b1[0][0] == pytest.approx(-0.02872450509, abs=.000001)
     assert b1[0][1] == pytest.approx(0.1993118695, abs=.000001)
 
-    w2 = initial_net[1]['w'].A
-    b2 = initial_net[1]['b'].A
+    w2 = initial_net[1][0].A
+    b2 = initial_net[1][1].A
 
     assert w2[0][0] == pytest.approx(0.16616113, abs=.000001)
     assert w2[0][1] == pytest.approx(0.13895135, abs=.000001)
@@ -130,10 +130,10 @@ def test_prep_sac_layer():
             'partitions': {} # don't actually need them for this test
             }
 
-    layer = {
-            'w': numpy.matrix('.5 .5; .5 .5'),
-            'b': numpy.matrix('.1 .1'),
-            }
+    layer = (
+            numpy.matrix('.5 .5; .5 .5'),
+            numpy.matrix('.1 .1'),
+            )
 
     current_net = [ layer ]
 
@@ -142,7 +142,7 @@ def test_prep_sac_layer():
     # we had a net with only 1 layer.  It should be 2 now.
     assert len(new_net) == 2
 
-    weights = new_net[1]['w'].A
+    weights = new_net[1][0].A
 
     assert weights[0][0] == pytest.approx(0.02459622524, abs=.000001)
     assert weights[0][1] == pytest.approx(0.1076893874, abs=.000001)

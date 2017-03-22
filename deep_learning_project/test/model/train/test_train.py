@@ -20,8 +20,8 @@ def test_calc_errors():
     i = numpy.matrix('0.4 0.9')
 
     net = [
-            { 'w': numpy.matrix('1 1.2; 0.5 0.5'), 'b': numpy.matrix('0 0.5') },
-            { 'w': numpy.matrix('0.1; -0.8'), 'b': numpy.matrix('-1.3') }
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
         ]
 
     t = numpy.matrix('0.1')
@@ -29,7 +29,7 @@ def test_calc_errors():
     (z1, z2) = feed_forward(i, net)
 
     output_error = calc_output_error(t, z2)
-    hidden_error = calc_hidden_error(output_error, z1, net[1]['w'])
+    hidden_error = calc_hidden_error(output_error, z1, net[1][0])
 
     assert output_error.item((0,0)) == pytest.approx(-0.0037, abs=.0001)
 
@@ -42,8 +42,8 @@ def test_calc_weight_deltas():
     i = numpy.matrix('0.4 0.9')
 
     net = [
-            { 'w': numpy.matrix('1 1.2; 0.5 0.5'), 'b': numpy.matrix('0 0.5') },
-            { 'w': numpy.matrix('0.1; -0.8'), 'b': numpy.matrix('-1.3') }
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
         ]
 
     t = numpy.matrix('0.1')
@@ -53,15 +53,15 @@ def test_calc_weight_deltas():
     errors = compute_errors(t, zs, net)
     deltas = calc_weight_deltas(learning_rate, errors, i, zs, net)
 
-    assert deltas[0]['b'].shape == (1,2)
+    assert deltas[0][1].shape == (1,2)
 
-    assert deltas[1]['w'].item((0,0)) == pytest.approx(-.000265, abs=.00001)
-    assert deltas[1]['w'].item((1,0)) == pytest.approx(-.000306, abs=.00001)
+    assert deltas[1][0].item((0,0)) == pytest.approx(-.000265, abs=.00001)
+    assert deltas[1][0].item((1,0)) == pytest.approx(-.000306, abs=.00001)
 
-    assert deltas[1]['b'].item((0,0)) == pytest.approx(-0.000379, abs=.00001)
-    assert deltas[1]['b'].shape == (1,1)
+    assert deltas[1][1].item((0,0)) == pytest.approx(-0.000379, abs=.00001)
+    assert deltas[1][1].shape == (1,1)
 
-    new_w2 = numpy.add(net[1]['w'], deltas[1]['w'])
+    new_w2 = numpy.add(net[1][0], deltas[1][0])
 
     assert new_w2.item((0,0)) == pytest.approx(0.09973, abs=.0001)
 
@@ -72,23 +72,23 @@ def test_backprop_iteration():
     i = numpy.matrix('0.4 0.9')
 
     net = [
-            { 'w': numpy.matrix('1 1.2; 0.5 0.5'), 'b': numpy.matrix('0 0.5') },
-            { 'w': numpy.matrix('0.1; -0.8'), 'b': numpy.matrix('-1.3') }
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
           ]
 
     t = numpy.matrix('0.1')
 
     new_net = backprop_iteration(c, i, net, t)
 
-    assert new_net[0]['w'].item((0,0)) == pytest.approx(0.999968, abs=.00001)
+    assert new_net[0][0].item((0,0)) == pytest.approx(0.999968, abs=.00001)
 
 def test_compute_errors():
     i = numpy.matrix('0.4 0.9')
     t = numpy.matrix('0.1')
 
     net = [
-            { 'w': numpy.matrix('1 1.2; 0.5 0.5'), 'b': numpy.matrix('0 0.5') },
-            { 'w': numpy.matrix('0.1; -0.8'), 'b': numpy.matrix('-1.3') }
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
           ]
 
     zs = feed_forward(i, net)

@@ -18,8 +18,10 @@ def random_weights(dataset, layer_sizes):
                 complete_layer_sizes[upper_index])
         bias_shape = (1, complete_layer_sizes[upper_index])
 
-        return {'w': numpy.matrix((numpy.random.random(weight_shape) - .5) / 2),
-                'b': numpy.matrix((numpy.random.random(bias_shape) -.5) / 2) }
+        return (
+                numpy.matrix((numpy.random.random(weight_shape) - .5) / 2),
+                numpy.matrix((numpy.random.random(bias_shape) -.5) / 2) 
+               )
 
     return [ init_layer(i) for i in range(1, len(complete_layer_sizes)) ]
 

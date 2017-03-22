@@ -15,7 +15,7 @@ vsigmoid_derivative = numpy.vectorize(sigmoid_derivative, otypes=[numpy.float])
 def compute_layer(i, layer, activation=vsigmoid):
     """ activation should be a vectorized function """
 
-    net = i.dot(layer['w']) + layer['b']
+    net = i.dot(layer[0]) + layer[1]
     activated = activation(net)
 
     #print('compute layer:', 'i:', i, 'layer:', layer, 'net:', net, 'activated:', activated)

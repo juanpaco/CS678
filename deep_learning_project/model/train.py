@@ -19,7 +19,7 @@ def calc_weight_deltas(c, errors, i, zs, net):
     signals.pop()
 
     for i in range(0, len(errors)):
-        w = net[i]['w']
+        w = net[i][0]
         (num_rows, num_cols) = w.shape
         delta_array = errors[i].A1
         z_array = signals[i].A1
@@ -31,7 +31,7 @@ def calc_weight_deltas(c, errors, i, zs, net):
         b_signal = numpy.matrix(numpy.ones((1, num_cols)))
         b_deltas = numpy.matrix([[ c * delta_array[col] for col in range(num_cols) ]])
 
-        deltas.append({ 'w': w_deltas, 'b': b_deltas })
+        deltas.append(( w_deltas, b_deltas ))
 
     return deltas
 
@@ -43,7 +43,7 @@ def compute_errors(t, zs, net):
         if len(errors) == 0:
             errors.append(calc_output_error(t, zs[index]))
         else:
-            errors.append(calc_hidden_error(errors[-1], zs[index], net[index+1]['w'])) 
+            errors.append(calc_hidden_error(errors[-1], zs[index], net[index+1][0])) 
 
     return list(reversed(errors))
 
@@ -62,7 +62,7 @@ def backprop_iteration(c, i, net, t, activation=vsigmoid):
     errors = compute_errors(t, zs, net)
     weight_deltas = calc_weight_deltas(c, errors, i, zs, net)
 
-    return [ { 'w': numpy.add(i[0]['w'], i[1]['w']), 'b': numpy.add(i[0]['b'], i[1]['b']) }
+    return [ ( numpy.add(i[0][0], i[1][0]), numpy.add(i[0][1], i[1][1]) ) 
         for i in zip(weight_deltas, net) ]
 
 def epoch(dataset, net, c):
@@ -121,6 +121,6 @@ def train(dataset, net, c, epochs):
         #    print('epoch:', i)
 
         net = epoch(dataset, net, c)
-        print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
+        #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
 
     return net

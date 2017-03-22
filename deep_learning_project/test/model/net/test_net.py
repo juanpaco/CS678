@@ -10,10 +10,10 @@ def test_sigmoid():
 def test_compute_layer():
     i = numpy.matrix('1 2')
 
-    layer = {
-            'w': numpy.matrix('.5 .5; .5 .5'),
-            'b': numpy.matrix('.1 .1')
-            }
+    layer = (
+            numpy.matrix('.5 .5; .5 .5'),
+            numpy.matrix('.1 .1')
+        )
 
     [ z ] = compute_layer(i, layer)
 
@@ -24,8 +24,8 @@ def test_feed_forward():
     i = numpy.matrix('1 2')
 
     net = [
-            { 'w': numpy.matrix('.5 .5; .5 .5'), 'b': numpy.matrix('.1 .1') },
-            { 'w': numpy.matrix('.25 .75; .75 .25'), 'b': numpy.matrix('.2 .2') }
+            ( numpy.matrix('.5 .5; .5 .5'), numpy.matrix('.1 .1') ),
+            ( numpy.matrix('.25 .75; .75 .25'), numpy.matrix('.2 .2') )
           ]
 
     [ z1, z2 ] = feed_forward(i, net)
@@ -38,8 +38,8 @@ def test_another_forward():
     i = numpy.matrix('0.4 0.9')
 
     net = [
-            { 'w': numpy.matrix('1 1.2; 0.5 0.5'), 'b': numpy.matrix('0 0.5') },
-            { 'w': numpy.matrix('0.1; -0.8'), 'b': numpy.matrix('-1.3') }
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'),  numpy.matrix('-1.3') )
         ]
 
     (z1, z2) = feed_forward(i, net)
