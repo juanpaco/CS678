@@ -19,3 +19,8 @@ print('initialize with sac')
 initial_net = stacked_auto_encoder(mnist, [ 100, 50, 25, 10 ], .1, 100)
 
 print('Sac only net %: ', evaluate_net(mnist, initial_net, 'test') * 100)
+
+# Now train it on the actual data
+refined_net = train(mnist, initial_net, .1, 1000)
+
+print('After refinement %: ', evaluate_net(mnist, refined_net, 'test') * 100)

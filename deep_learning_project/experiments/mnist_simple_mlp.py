@@ -10,7 +10,7 @@ mnist = load_mnist()
 print('initialize with random weights')
 net = random_weights(mnist, [ 100 ])
 
-print('Random net %: ', evaluate_net(mnist, net, 'validation') * 100)
+print('Random net %: ', evaluate_net(mnist, net, 'test') * 100)
 
 print('begin training')
 res = train(mnist, net, .1, 1000)
