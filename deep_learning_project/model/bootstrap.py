@@ -77,7 +77,7 @@ def make_prep_sac_layer(dataset, c, epochs):
 
         net = random_weights(prepped_dataset, [ layer_size ])
 
-        new_net = train(prepped_dataset, net, c, epochs)
+        new_net = train(prepped_dataset, net, c, epochs, evaluate=False)
 
         layers.append(new_net[0])
         

@@ -92,13 +92,13 @@ def load_mnist():
         {
             'input': numpy.matrix(training[0][i]) / 255,
             'output': output_map[training[1][i]],
-        } for i in range(0, 1000)]#len(training[0])) ]
+        } for i in range(0, len(training[0])) ]
 
     test_instances = [
         {
             'input': numpy.matrix(testing[0][i]) / 255,
             'output': output_map[testing[1][i]],
-        } for i in range(0, 1000)]#len(testing[0])) ]
+        } for i in range(0, len(testing[0])) ]
 
     (training_indices, validation_indices) = split_list(
             training_instances,

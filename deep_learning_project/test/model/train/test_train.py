@@ -100,19 +100,6 @@ def test_compute_errors():
     assert errors[0].item((0,0)) == pytest.approx(-0.000079, abs=.00001)
     assert errors[0].item((0,1)) == pytest.approx(0.000469, abs=.0001)
 
-#def test_train():
-#    # Let's always get the same conditions
-#    random.seed(0)
-#    numpy.random.seed(1)
-#
-#    dataset = load_iris()
-#    net = random_weights(dataset, [ 20 ])
-#
-#    res = train(dataset, net, .1, 1)
-#
-#    # We're not actually testing anything here.  Just pass it if it runs.  I
-#    #   observed good results.  Can add some specific checks later.
-#
 #def test_train_auto_encoder():
 #    random.seed(0)
 #    numpy.random.seed(1)

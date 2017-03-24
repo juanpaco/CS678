@@ -89,7 +89,8 @@ def epoch(dataset, net, c):
 
     #return reduce(tick, dataset['partitions']['training'], net)
 
-def evaluate_net(dataset, net):
+# against_set - a string, one of 'validation' or 'test'
+def evaluate_net(dataset, net, against_set):
     def coerce_output(output):
         return [ 1 if i == numpy.argmax(output) else 0
                 for i in range(0, output.shape[1]) ]
@@ -97,7 +98,7 @@ def evaluate_net(dataset, net):
     def compare(actual, target):
         coerced_actual = coerce_output(actual)
 
-    #    print(coerced_actual, target.A[0])
+        #print(coerced_actual, target.A[0])
 
         return 1 if numpy.array_equal(coerced_actual, target.A[0]) else 0
 
@@ -106,21 +107,45 @@ def evaluate_net(dataset, net):
 
         return count + compare(zs[-1], dataset['data'][ind]['output'])
 
-    correct_count = reduce(reduce_count, dataset['partitions']['validation'], 0)
+    correct_count = reduce(reduce_count, dataset['partitions'][against_set], 0)
 
-    return correct_count / len(dataset['partitions']['validation'])
+    return correct_count / len(dataset['partitions'][against_set])
 
-def train(dataset, net, c, epochs):
+def train(dataset, net, c, epochs, patience=20, evaluate=True):
     print('Start training:')
     print('\ttraining instances:', len(dataset['partitions']['training']))
     print('\tvalidation instances:', len(dataset['partitions']['validation']))
     print('\ttest instances:', len(dataset['partitions']['test']))
+    print('\tpatience:', patience)
+
+    best_net = None
+    best_net_score = 0
+    iterations_since_improvment = 0
+    current_net = net
 
     for i in range(0, epochs):
         #if i % 1000 == 0:
         #    print('epoch:', i)
+        current_net = epoch(dataset, current_net, c)
 
-        net = epoch(dataset, net, c)
-        #print(i, ': validation %: ', evaluate_net(dataset, net) * 100)
+        if evaluate:
+            validation_score = evaluate_net(dataset, current_net, 'validation')
+            print(
+                i,
+                ': validation %: ',
+                validation_score * 100
+                )
 
-    return net
+            if (validation_score > best_net_score):
+                best_net_score = validation_score
+                best_net = current_net
+                iterations_since_improvment = 0
+            else:
+                iterations_since_improvment += 1
+
+            if iterations_since_improvment == patience:
+                current_net = best_net
+                print('**Breaking because we passed patience threshold')
+                break
+
+    return current_net 
