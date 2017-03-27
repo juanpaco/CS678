@@ -47,7 +47,7 @@ def stacked_auto_encoder(dataset, layer_sizes, c, hidden_epochs=100):
 #   feeding forward through the net over and over again seems like it'll take a
 #   lot of time.  I'm choosing time efficiency over space efficiency.
 def dataset_to_sac_dataset(dataset, current_net):
-    print('dataset_to_sac_dataset:' len(current_net))
+    print('dataset_to_sac_dataset:', len(current_net))
 
     indices = list(range(0, len(dataset['data'])))
     random.shuffle(indices)
