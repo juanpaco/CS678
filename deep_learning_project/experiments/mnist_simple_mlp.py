@@ -15,4 +15,4 @@ print('Random net %: ', evaluate_net(mnist, net, 'test') * 100)
 print('begin training')
 res = train(mnist, net, .1, 1000)
 
-print('Trained net %: ', evaluate_net(mnist, net, 'test') * 100)
+print('Trained net %: ', evaluate_net(mnist, res, 'test') * 100)

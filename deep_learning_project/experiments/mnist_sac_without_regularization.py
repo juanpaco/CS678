@@ -16,7 +16,7 @@ print('load dataset')
 mnist = load_mnist()
 
 print('initialize with sac')
-initial_net = stacked_auto_encoder(mnist, [ 100, 50, 25, 10 ], .1, 100)
+initial_net = stacked_auto_encoder(mnist, [ 100, 50, 25, 10 ], .1, 10)
 
 print('Sac only net %: ', evaluate_net(mnist, initial_net, 'test') * 100)
 

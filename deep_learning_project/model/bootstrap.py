@@ -47,6 +47,8 @@ def stacked_auto_encoder(dataset, layer_sizes, c, hidden_epochs=100):
 #   feeding forward through the net over and over again seems like it'll take a
 #   lot of time.  I'm choosing time efficiency over space efficiency.
 def dataset_to_sac_dataset(dataset, current_net):
+    print('dataset_to_sac_dataset:' len(current_net))
+
     indices = list(range(0, len(dataset['data'])))
     random.shuffle(indices)
 
@@ -65,7 +67,7 @@ def process_sac_input(i, current_net):
     if len(current_net) == 0:
         z = i['input']
     else:
-      z = feed_forward(i['input'], current_net)[-1]
+        z = feed_forward(i['input'], current_net)[-1]
 
     new_input = numpy.matrix(z)
 
@@ -73,9 +75,12 @@ def process_sac_input(i, current_net):
 
 def make_prep_sac_layer(dataset, c, epochs):
     def prep_sac_layer(layers, layer_size):
+        print('prep_sac_layer:', len(layers), layer_size)
+
         prepped_dataset = dataset_to_sac_dataset(dataset, layers)
 
         net = random_weights(prepped_dataset, [ layer_size ])
+        print('Initialized random net')
 
         new_net = train(prepped_dataset, net, c, epochs, evaluate=False)
 
