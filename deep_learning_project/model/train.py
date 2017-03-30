@@ -1,6 +1,7 @@
 from collections import deque
 from functools import (reduce)
 import numpy
+import random
 
 from .net import(feed_forward, vsigmoid, vsigmoid_derivative)
 
@@ -65,29 +66,26 @@ def backprop_iteration(c, i, net, t, activation=vsigmoid):
     return [ ( numpy.add(i[0][0], i[1][0]), numpy.add(i[0][1], i[1][1]) ) 
         for i in zip(weight_deltas, net) ]
 
-def epoch(dataset, net, c):
+def epoch(dataset, net, c, corruption_rate):
     current_net = net
 #    count = 0
 
     for i in dataset['partitions']['training']:
+        if corruption_rate > 0:
+            the_input = corrupt_input(dataset['data'][i]['input'], corruption_rate)
+        else:
+            the_input = dataset['data'][i]['input']
+
+        #print('original', dataset['data'][i]['input'])
+        #print('corrupted', the_input)
 #        count += 1
 #        print('count:', count)
         current_net = backprop_iteration(c,
-            dataset['data'][i]['input'],
+            the_input,
             current_net,
             dataset['data'][i]['output'])
 
     return current_net
-
-    #def tick(net, input_index):
-    #    #print ('tick:')
-    #    #print('input', dataset['data'][input_index]['input'], dataset['data'][input_index]['output'], net)
-    #    return backprop_iteration(c,
-    #        dataset['data'][input_index]['input'],
-    #        net,
-    #        dataset['data'][input_index]['output'])
-
-    #return reduce(tick, dataset['partitions']['training'], net)
 
 # against_set - a string, one of 'validation' or 'test'
 def evaluate_net(dataset, net, against_set):
@@ -111,12 +109,24 @@ def evaluate_net(dataset, net, against_set):
 
     return correct_count / len(dataset['partitions'][against_set])
 
-def train(dataset, net, c, epochs, patience=20, evaluate=True):
+def corrupt_input(i, corruption_rate):
+    new_input = i.copy()
+
+    for x in range(0, i.size):
+        if random.uniform(0,1) <= corruption_rate:
+            new_input.itemset(x, 0)
+
+    return new_input
+
+
+def train(dataset, net, c, epochs, corruption_rate=0, patience=20, evaluate=True):
     print('Start training:')
     print('\ttraining instances:', len(dataset['partitions']['training']))
     print('\tvalidation instances:', len(dataset['partitions']['validation']))
     print('\ttest instances:', len(dataset['partitions']['test']))
     print('\tpatience:', patience)
+    print('\tmax epocs:', epochs)
+    print('\tcorruption rate:', corruption_rate)
 
     best_net = None
     best_net_score = 0
@@ -126,7 +136,7 @@ def train(dataset, net, c, epochs, patience=20, evaluate=True):
     for i in range(0, epochs):
         #if i % 1000 == 0:
         #    print('epoch:', i)
-        current_net = epoch(dataset, current_net, c)
+        current_net = epoch(dataset, current_net, c, corruption_rate)
 
         if evaluate:
             validation_score = evaluate_net(dataset, current_net, 'validation')

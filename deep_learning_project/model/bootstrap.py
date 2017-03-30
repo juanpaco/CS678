@@ -25,10 +25,10 @@ def random_weights(dataset, layer_sizes):
 
     return [ init_layer(i) for i in range(1, len(complete_layer_sizes)) ]
 
-def stacked_auto_encoder(dataset, layer_sizes, c, hidden_epochs=100):
+def stacked_auto_encoder(dataset, layer_sizes, c, hidden_epochs=100, corruption_rate=0):
     final_net = []
 
-    prep_sac_layer = make_prep_sac_layer(dataset, c, hidden_epochs)
+    prep_sac_layer = make_prep_sac_layer(dataset, c, hidden_epochs, corruption_rate)
 
     final_net = reduce(
             prep_sac_layer,
@@ -73,16 +73,15 @@ def process_sac_input(i, current_net):
 
     return { 'input': new_input, 'output': new_input }
 
-def make_prep_sac_layer(dataset, c, epochs):
+def make_prep_sac_layer(dataset, c, epochs, corruption_rate):
     def prep_sac_layer(layers, layer_size):
-        print('prep_sac_layer:', len(layers), layer_size)
 
         prepped_dataset = dataset_to_sac_dataset(dataset, layers)
 
         net = random_weights(prepped_dataset, [ layer_size ])
         print('Initialized random net')
 
-        new_net = train(prepped_dataset, net, c, epochs, evaluate=False)
+        new_net = train(prepped_dataset, net, c, epochs, corruption_rate, evaluate=False)
 
         layers.append(new_net[0])
         
