@@ -5,6 +5,11 @@ import random
 
 from .net import(feed_forward, vsigmoid, vsigmoid_derivative)
 
+def decay(weight, rate):
+    return weight * rate
+
+decayv = numpy.vectorize(decay)
+
 def calc_hidden_error(little_delta_k, z, w, fprime=vsigmoid_derivative):
     return numpy.multiply(little_delta_k.dot(w.T), fprime(z))
 
@@ -51,22 +56,44 @@ def compute_errors(t, zs, net):
 # c i learning rate
 # i - input
 # net - array of weights and biases
-def backprop_iteration(c, i, net, t, activation=vsigmoid):
+def backprop_iteration(c, i, net, t, decay_rate=0, activation=vsigmoid):
     """ output would be the updated weights """
 
     #print('c', c)
     #print('i', i)
     #print('net', net)
     #print('t', t)
+    #print('decay_rate', decay_rate)
 
     zs = feed_forward(i, net, activation)
     errors = compute_errors(t, zs, net)
     weight_deltas = calc_weight_deltas(c, errors, i, zs, net)
 
-    return [ ( numpy.add(i[0][0], i[1][0]), numpy.add(i[0][1], i[1][1]) ) 
-        for i in zip(weight_deltas, net) ]
+    updated_weights = decay_weights(net, decay_rate)
 
-def epoch(dataset, net, c, corruption_rate):
+    updated_weights = [
+            ( numpy.add(i[0][0], i[1][0]), numpy.add(i[0][1], i[1][1]) ) 
+            for i in zip(weight_deltas, updated_weights)
+        ]
+
+
+    return updated_weights
+
+# net is the net prior to receiving weight updates
+# rate is between 0 and 1
+# returns the net with its weights decayed by decay_rate
+def decay_weights(net, rate):
+    if rate == 0:
+        return net
+
+    decay_deltas  = [ ( decayv(i[0], rate), decayv(i[1], rate) ) for i in net ]
+
+    return [
+            ( numpy.subtract(i[0][0], i[1][0]), numpy.subtract(i[0][1], i[1][1]) ) 
+            for i in zip(net, decay_deltas)
+        ]
+
+def epoch(dataset, net, c, corruption_rate, decay_rate):
     current_net = net
 #    count = 0
 
@@ -83,7 +110,9 @@ def epoch(dataset, net, c, corruption_rate):
         current_net = backprop_iteration(c,
             the_input,
             current_net,
-            dataset['data'][i]['output'])
+            dataset['data'][i]['output'],
+            decay_rate=decay_rate,
+            )
 
     return current_net
 
@@ -119,7 +148,7 @@ def corrupt_input(i, corruption_rate):
     return new_input
 
 
-def train(dataset, net, c, epochs, corruption_rate=0, patience=20, evaluate=True):
+def train(dataset, net, c, epochs, corruption_rate=0, decay_rate=0, patience=20, evaluate=True):
     print('Start training:')
     print('\ttraining instances:', len(dataset['partitions']['training']))
     print('\tvalidation instances:', len(dataset['partitions']['validation']))
@@ -127,6 +156,7 @@ def train(dataset, net, c, epochs, corruption_rate=0, patience=20, evaluate=True
     print('\tpatience:', patience)
     print('\tmax epocs:', epochs)
     print('\tcorruption rate:', corruption_rate)
+    print('\tdecay rate:', decay_rate)
 
     best_net = None
     best_net_score = 0
@@ -136,7 +166,7 @@ def train(dataset, net, c, epochs, corruption_rate=0, patience=20, evaluate=True
     for i in range(0, epochs):
         #if i % 1000 == 0:
         #    print('epoch:', i)
-        current_net = epoch(dataset, current_net, c, corruption_rate)
+        current_net = epoch(dataset, current_net, c, corruption_rate, decay_rate)
 
         if evaluate:
             validation_score = evaluate_net(dataset, current_net, 'validation')

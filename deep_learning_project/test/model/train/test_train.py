@@ -10,6 +10,7 @@ from model import (
         calc_weight_deltas,
         compute_errors,
         corrupt_input,
+        decay_weights,
         evaluate_net,
         feed_forward,
         random_weights,
@@ -82,6 +83,50 @@ def test_backprop_iteration():
     new_net = backprop_iteration(c, i, net, t)
 
     assert new_net[0][0].item((0,0)) == pytest.approx(0.999968, abs=.00001)
+
+def test_decay_weights():
+    net = [
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
+          ]
+
+    decayed_net = decay_weights(net, .1)
+
+    assert decayed_net[0][0].item((0,0)) == 0.9
+    assert decayed_net[0][1].item((0,1)) == 0.45
+    assert decayed_net[1][0].item((0,0)) == .09
+
+def test_decay_weights_with_zero_rate():
+    net = [
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
+          ]
+
+    decayed_net = decay_weights(net, 0)
+
+    assert decayed_net[0][0].item((0,0)) == 1
+    assert decayed_net[0][1].item((0,1)) == 0.5
+    assert decayed_net[1][0].item((0,0)) == .1
+    
+
+def test_backprop_iteration_with_weight_decay():
+    # learning rate
+    c = 1
+
+    i = numpy.matrix('0.4 0.9')
+
+    net = [
+            ( numpy.matrix('1 1.2; 0.5 0.5'), numpy.matrix('0 0.5') ),
+            ( numpy.matrix('0.1; -0.8'), numpy.matrix('-1.3') )
+          ]
+
+    t = numpy.matrix('0.1')
+
+    decay_rate = .1
+
+    new_net = backprop_iteration(c, i, net, t, decay_rate=decay_rate)
+
+    assert new_net[0][0].item((0,0)) == pytest.approx(0.899968, abs=.00001)
 
 def test_compute_errors():
     i = numpy.matrix('0.4 0.9')

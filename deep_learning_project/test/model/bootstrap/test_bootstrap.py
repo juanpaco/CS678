@@ -137,7 +137,7 @@ def test_prep_sac_layer():
 
     current_net = [ layer ]
 
-    new_net = make_prep_sac_layer(dataset, .1, 1)(current_net, 3)
+    new_net = make_prep_sac_layer(dataset, .1, 1, 0, 0)(current_net, 3)
 
     # we had a net with only 1 layer.  It should be 2 now.
     assert len(new_net) == 2

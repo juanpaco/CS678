@@ -1,18 +1,11 @@
-from dataset import (load_mnist)
-from model import (
-        evaluate_net,
-        random_weights,
-        train)
+from experiments.run_mnist_experiment import (run)
 
-print('load dataset')
-mnist = load_mnist()
-
-print('initialize with random weights')
-net = random_weights(mnist, [ 100 ])
-
-print('Random net %: ', evaluate_net(mnist, net, 'test') * 100)
-
-print('begin training')
-res = train(mnist, net, .1, 1000)
-
-print('Trained net %: ', evaluate_net(mnist, res, 'test') * 100)
+run(
+        [ 100, 50, 25, 10 ],
+        learning_rate=.1,
+        corruption_rate=0,
+        decay_rate=0,
+        hidden_epochs=1000,
+        seed=0,
+        init_with='random',
+    )

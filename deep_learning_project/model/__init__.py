@@ -7,6 +7,7 @@ from .train import (calc_hidden_error,
         calc_weight_deltas,
         compute_errors,
         corrupt_input,
+        decay_weights,
         evaluate_net,
         backprop_iteration,
         train)
