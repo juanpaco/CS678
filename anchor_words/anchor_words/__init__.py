@@ -1,6 +1,7 @@
 from functools import reduce 
 import numpy
 import scipy
+from sklearn.preprocessing import normalize
 
 def reduce_file_vocab_and_wordcount(memo, document):
     by_word = {}
@@ -45,20 +46,171 @@ def build_q(vocab_and_wordcounts):
     #print(wordcounts)
 
     for doc_id, wordcount in enumerate(wordcounts):
-        #print(doc_id, ':', wordcount)
         doc_length = 0
         normalization_factor = wordcount['total'] * (wordcount['total'] - 1)
 
         for word_id, count in wordcount['by_word'].items():
             doc_length += count
 
-            h_tilde[word_id, doc_id] = count / numpy.sqrt(normalization_factor)
-            h_hat[word_id] += count / normalization_factor
+            # Sometimes the normalization factor comes out as 0.  Don't
+            #   normalize if that's the case.
+            if normalization_factor > 0:
+                h_tilde[word_id, doc_id] = count / numpy.sqrt(normalization_factor)
+                h_hat[word_id] += count / normalization_factor
 
             #print(word_id, ':', count)
-
 
     #print('vocab', vocab)
     #print('h_tilde', h_tilde)
     #print('h_hat', h_hat)
     return h_tilde * h_tilde.transpose() - numpy.diag(h_hat)
+
+lower_r_bound = 1/6
+next_r_bound = 1/3
+sqrt_3 = numpy.sqrt(3)
+neg_sqrt_3 = -1 * numpy.sqrt(3)
+
+def down_project(matrix, target_dimenstions, random):
+    """ Takes matrix of size N X M and projects it to a
+    N X <target_dimenstions> matrix.
+
+    Uses the algorithm found in
+    https://pdfs.semanticscholar.org/594d/2e123ecb8ec0bc781aec467007d65ab5464d.pdf"""
+
+    def get_value_for_r(whatevs, lolz):
+        sample = random.random_sample()
+
+        if (sample < lower_r_bound):
+            return sqrt_3
+        elif (sample < next_r_bound):
+            return neg_sqrt_3
+        else:
+            return 0.0
+
+
+    r = numpy.fromfunction(
+            numpy.vectorize(get_value_for_r),
+            (matrix.shape[1], target_dimenstions),
+            dtype=float,
+        )
+
+    return numpy.dot(matrix, r)
+
+def normalize_rows(matrix):
+    return normalize(matrix, axis=1, norm='l1') 
+
+def normalize_vector(vector):
+    denominator = numpy.dot(vector, vector)
+
+    if denominator == 0:
+        return numpy.zeros(vector.shape[0])
+
+    return vector / numpy.dot(vector, vector)
+
+def project_vector_onto_vector(project_me, onto):
+    numerator = numpy.dot(project_me, onto)
+    denominator = numpy.dot(onto, onto)
+
+    if denominator == 0:
+        return numpy.zeros(project_me.shape[0])
+
+    return onto * (numerator / denominator)
+
+def select_anchors(q_norm, anchor_count, projection_dimensions, random):
+    """ Selects the anchors from a normalized Q matrix.
+
+    anchor_count is the number of anchors we want to find.
+
+    projection_dimensions is the number of dimensions to project q_norm into.
+      This is a tunable hyper parameter.
+
+    random is an instance of numpy.random.RandomState
+
+    The Arora et al. paper https://arxiv.org/abs/1212.4777 describes an anchor
+      selection algorithm that involves finding the furthest point from a span.
+      I'm not linear algebra expert, but from what I can gather, determining
+      such a distance requires orthogonal vectors. Our q_norm rows aren't
+      necessarily orthogonal.
+
+    But take heart!  There's a process by which we can take linearly-independent
+      vectors and orthogonalize them!
+      https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+      So, we'll implment that process.
+    """
+   
+    projected_q_norm = down_project(q_norm, projection_dimensions, random)
+
+    # TODO: consider only considering words that appear in a certain number of
+    #   docs
+    anchors = []
+    max_length = -1.0
+    max_index = -1
+
+    for i in range(projected_q_norm.shape[0]):
+        length = numpy.dot(projected_q_norm[i], projected_q_norm[i])
+
+        if (length > max_length):
+            max_length = length
+            max_index = i
+
+    #print('first anchor', max_index, projected_q_norm[max_index])
+    # First anchor needs to become the origin so that the dot product tells us
+    #   distance from span as we start doing the transforms
+    for i in range(projected_q_norm.shape[0]):
+        projected_q_norm[i] = projected_q_norm[i] - projected_q_norm[max_index]
+        #print('centering ', i, ':', projected_q_norm[i])
+
+    anchors.append(max_index)
+    projection_basis = normalize_vector(projected_q_norm[max_index])
+
+    # Does the numerically stable Gram-Schmidt described in the Wikipedia
+    #   article.  We keep updating all the Qs
+    for anchor_index in range(1, anchor_count):
+        max_length = -1.0
+        max_index = -1
+
+        for i in range(1, projected_q_norm.shape[0]):
+            if i not in anchors:
+                projected = project_vector_onto_vector(
+                        projected_q_norm[i],
+                        projection_basis
+                    )
+
+                projected_q_norm[i] = projected_q_norm[i] - projected
+
+                length = numpy.dot(projected_q_norm[i], projected_q_norm[i])
+
+                if length > max_length:
+                    max_length = length
+                    max_index = i
+
+        anchors.append(max_index)
+        projection_basis = normalize_vector(projected_q_norm[max_index])
+
+    return anchors
+     
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
