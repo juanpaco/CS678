@@ -22,7 +22,6 @@ def reduce_file_vocab_and_wordcount(memo, document):
     return memo
 
 def build_vocab_and_wordcounts(documents):
-
     vocab_and_wordcounts = reduce(
             reduce_file_vocab_and_wordcount,
             documents,
@@ -36,6 +35,8 @@ def build_vocab_and_wordcounts(documents):
 def build_q(vocab_and_wordcounts):
     vocab = vocab_and_wordcounts['vocab']
     wordcounts = vocab_and_wordcounts['wordcounts']
+
+    print('build q', len(vocab))
 
     h_tilde = scipy.sparse.lil_matrix(
             (len(vocab), len(wordcounts)),
@@ -188,29 +189,82 @@ def select_anchors(q_norm, anchor_count, projection_dimensions, random):
         projection_basis = normalize_vector(projected_q_norm[max_index])
 
     return anchors
-     
-     
 
+def get_dem_topics(q, anchor_words):
+    print('hello')
+    
+def exponentiated_gradient(Y, X, XX, epsilon):
+    """Solves an exponentied gradient problem with L2 divergence
+   
+       This function comes from https://github.com/jlund3/ankura/blob/master/ankura/topic.py.
 
+       I renamed many things to make it less generic and more pedagogic.
+    """
+    XY = numpy.dot(X, Y)
+    YY = float(numpy.dot(Y, Y))
 
+    alpha = numpy.ones(X.shape[0]) / X.shape[0]
+    old_alpha = numpy.copy(alpha)
+    log_alpha = numpy.log(alpha)
+    old_log_alpha = numpy.copy(log_alpha)
 
+    AXX = numpy.dot(alpha, XX)
+    AXY = float(numpy.dot(alpha, XY))
+    AXXA = float(numpy.dot(AXX, alpha.transpose()))
 
+    grad = 2 * (AXX - XY)
+    old_grad = numpy.copy(grad)
 
+    new_obj = AXXA - 2 * AXY + YY
 
+    # Initialize book keeping
+    stepsize = 1
+    decreased = False
+    convergence = float('inf')
 
+    while convergence >= epsilon:
+        old_obj = new_obj
+        old_alpha = numpy.copy(alpha)
+        old_log_alpha = numpy.copy(log_alpha)
+        if new_obj == 0 or stepsize == 0:
+            break
 
+        # Add the gradient and renormalize in logspace, then exponentiate
+        log_alpha -= stepsize * grad
+        log_alpha -= logsum_exp(log_alpha)
+        alpha = numpy.exp(log_alpha)
 
+        # Precompute quantities needed for adaptive stepsize
+        AXX = numpy.dot(alpha, XX)
+        AXY = float(numpy.dot(alpha, XY))
+        AXXA = float(numpy.dot(AXX, alpha.transpose()))
 
+        # See if stepsize should decrease
+        old_obj, new_obj = new_obj, AXXA - 2 * AXY + YY
+        offset = _C1 * stepsize * numpy.dot(grad, alpha - old_alpha)
+        new_obj_threshold = old_obj + offset
+        if new_obj >= new_obj_threshold:
+            stepsize /= 2.0
+            alpha = old_alpha
+            log_alpha = old_log_alpha
+            new_obj = old_obj
+            decreased = True
+            continue
 
+        # compute the new gradient
+        old_grad, grad = grad, 2 * (AXX - XY)
 
+        # See if stepsize should increase
+        if numpy.dot(grad, alpha - old_alpha) < _C2 * numpy.dot(old_grad, alpha - old_alpha) and not decreased:
+            stepsize *= 2.0
+            alpha = old_alpha
+            log_alpha = old_log_alpha
+            grad = old_grad
+            new_obj = old_obj
+            continue
 
+        # Update book keeping
+        decreased = False
+        convergence = numpy.dot(alpha, grad - grad.min())
 
-
-
-
-
-
-
-
-
-
+    return alpha 

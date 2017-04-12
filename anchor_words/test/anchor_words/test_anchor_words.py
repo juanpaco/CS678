@@ -161,3 +161,27 @@ def test_select_anchors():
     assert len(anchors) == num_topics
     assert vocab_and_wordcounts['vocab'][anchors[0]] == 'file'
     assert vocab_and_wordcounts['vocab'][anchors[1]] == 'dog'
+
+def test_get_normalization_constants():
+    """ making sure I know how to use numpy """
+    matrix = numpy.matrix('1 2 3; 4 5 6; 7 8 9')
+
+    normalization_constants = matrix.sum(axis=1)
+
+    assert normalization_constants[0] == 6
+    assert normalization_constants[1] == 15
+    assert normalization_constants[2] == 24
+
+def test_get_dem_topics():
+    random = numpy.random.RandomState(1)
+    print('load data')
+    raw_data = tokenize_dataset('sotu')
+    print('vocab and wordcounts')
+    vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
+    print('build q')
+    q = build_q(vocab_and_wordcounts)
+    print('normalize q')
+    q_norm = normalize_rows(q)
+
+    print('done')
+    
