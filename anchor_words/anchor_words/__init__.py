@@ -36,8 +36,6 @@ def build_q(vocab_and_wordcounts):
     vocab = vocab_and_wordcounts['vocab']
     wordcounts = vocab_and_wordcounts['wordcounts']
 
-    print('build q', len(vocab))
-
     h_tilde = scipy.sparse.lil_matrix(
             (len(vocab), len(wordcounts)),
             dtype=float,
@@ -64,7 +62,7 @@ def build_q(vocab_and_wordcounts):
     #print('vocab', vocab)
     #print('h_tilde', h_tilde)
     #print('h_hat', h_hat)
-    return h_tilde * h_tilde.transpose() - numpy.diag(h_hat)
+    return numpy.array(h_tilde * h_tilde.transpose() - numpy.diag(h_hat))
 
 lower_r_bound = 1/6
 next_r_bound = 1/3
@@ -98,7 +96,8 @@ def down_project(matrix, target_dimenstions, random):
     return numpy.dot(matrix, r)
 
 def normalize_rows(matrix):
-    return normalize(matrix, axis=1, norm='l1') 
+    #return normalize(matrix, axis=1, norm='l1') 
+    return matrix / matrix.sum(axis=1)[:, numpy.newaxis]
 
 def normalize_vector(vector):
     denominator = numpy.dot(vector, vector)
@@ -117,7 +116,7 @@ def project_vector_onto_vector(project_me, onto):
 
     return onto * (numerator / denominator)
 
-def select_anchors(q_norm, anchor_count, projection_dimensions, random):
+def select_anchors(q, q_norm, anchor_count, projection_dimensions, random):
     """ Selects the anchors from a normalized Q matrix.
 
     anchor_count is the number of anchors we want to find.
@@ -188,11 +187,45 @@ def select_anchors(q_norm, anchor_count, projection_dimensions, random):
         anchors.append(max_index)
         projection_basis = normalize_vector(projected_q_norm[max_index])
 
-    return anchors
+    return q[anchors, :], anchors
 
-def get_dem_topics(q, anchor_words):
-    print('hello')
+def get_dem_topics(q, q_norm, anchor_words, epsilon=2e-7):
+    vocab_size = q.shape[0]
+    topic_count = len(anchor_words)
+    A = numpy.zeros((vocab_size, topic_count))
+
+    normalization_constants = numpy.diag(q.sum(axis=1))
+
+    # Don't let there be zeroes?
+
+    normalized_anchors = normalize_rows(anchor_words)
+    normalized_anchors_square = numpy.dot(
+            normalized_anchors,
+            normalized_anchors.transpose()
+        )
+
+    for word in range(vocab_size):
+        a_row = exponentiated_gradient(
+                q[word, :],
+                normalized_anchors,
+                normalized_anchors_square,
+                epsilon,
+            )
+        
+        if numpy.isnan(a_row).any():
+            a_row = numpy.ones(topic_count) / topic_count
+        
+        A[word, :] = a_row
+
+    A = numpy.matrix(normalization_constants) * numpy.matrix(A)
+    for k in range(topic_count):
+        A[:, k] = A[:, k] / A[:, k].sum()
+
+    return numpy.array(A)
     
+_C1 = 1e-4
+_C2 = .75
+
 def exponentiated_gradient(Y, X, XX, epsilon):
     """Solves an exponentied gradient problem with L2 divergence
    
@@ -268,3 +301,44 @@ def exponentiated_gradient(Y, X, XX, epsilon):
         convergence = numpy.dot(alpha, grad - grad.min())
 
     return alpha 
+
+def logsum_exp(y):
+    """Computes the sum of y in log space"""
+    ymax = y.max()
+    return ymax + numpy.log((numpy.exp(y - ymax)).sum())
+
+def get_topic_indices(topics, count):
+    topics_with_indices = []
+    for i in range(topics.shape[1]):
+        topics_with_indices.append(
+		[ word for word in numpy.argsort(topics[:, i])[-count:][::-1] ]
+	    )
+
+    return topics_with_indices
+
+def topic_indices_to_words(topics, vocab):
+    return [ [ vocab[i] for i in topic ] for topic in topics ]
+
+def process_dataset(dataset_name):
+    print('Process', dataset_name)
+    raw_data = tokenize_dataset('test')
+
+    print('vocab and wordcounts')
+    vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
+
+    print('build q')
+    q = build_q(vocab_and_wordcounts)
+    q_norm = normalize_rows(q)
+
+    num_topics = 2
+    projection_dimensions = 4
+
+    anchors = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
+
+    print('get the topics')
+    topics = get_dem_topics(q, q_norm, anchors)
+
+    topic_indices = get_topic_indices(topics, 10)
+    topic_words = topic_indices_to_words(topics, vocab_and_wordcounts['vocab'])
+
+    print(topic_words)

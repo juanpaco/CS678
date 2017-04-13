@@ -5,11 +5,14 @@ from anchor_words import (
         build_vocab_and_wordcounts,
         build_q,
         down_project,
+        get_dem_topics,
+        get_topic_indices,
         normalize_rows,
         normalize_vector,
         project_vector_onto_vector,
         reduce_file_vocab_and_wordcount,
         select_anchors,
+        topic_indices_to_words,
     )
 
 from read_dataset import (tokenize_dataset)
@@ -94,9 +97,6 @@ def test_reduce_file_vocab_and_wordcount():
     assert vocab_and_wordcounts['wordcounts'][1]['by_word'][3] == 1
     assert vocab_and_wordcounts['wordcounts'][1]['total'] == 3
 
-def test_pick_anchor_words():
-    print('hello')
-
 def test_down_project():
     random = numpy.random.RandomState(1)
 
@@ -108,7 +108,7 @@ def test_down_project():
     assert projected.item((0,1)) == pytest.approx(1.732, abs=.001)
 
 def test_normalize_rows():
-    matrix = numpy.matrix('1 2 3; 3 8 7', dtype=float)
+    matrix = numpy.array([ [ 1, 2, 3 ], [ 3, 8, 7 ] ], dtype=float)
 
     normalized = normalize_rows(matrix)
 
@@ -156,11 +156,17 @@ def test_select_anchors():
     num_topics = 2
     projection_dimensions = 4
 
-    anchors = select_anchors(q_norm, num_topics, projection_dimensions, random)
+    anchors, anchor_indices = select_anchors(
+            q,
+            q_norm,
+            num_topics,
+            projection_dimensions,
+            random
+        )
 
     assert len(anchors) == num_topics
-    assert vocab_and_wordcounts['vocab'][anchors[0]] == 'file'
-    assert vocab_and_wordcounts['vocab'][anchors[1]] == 'dog'
+    assert vocab_and_wordcounts['vocab'][anchor_indices[0]] == 'file'
+    assert vocab_and_wordcounts['vocab'][anchor_indices[1]] == 'dog'
 
 def test_get_normalization_constants():
     """ making sure I know how to use numpy """
@@ -174,14 +180,52 @@ def test_get_normalization_constants():
 
 def test_get_dem_topics():
     random = numpy.random.RandomState(1)
-    print('load data')
-    raw_data = tokenize_dataset('sotu')
-    print('vocab and wordcounts')
+    raw_data = tokenize_dataset('test')
     vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
-    print('build q')
     q = build_q(vocab_and_wordcounts)
-    print('normalize q')
     q_norm = normalize_rows(q)
 
-    print('done')
-    
+    num_topics = 2
+    projection_dimensions = 4
+
+    anchors, anchor_indices = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
+
+    topics = get_dem_topics(q, q_norm, anchors)
+
+def test_get_topic_indices():
+    topics = numpy.array([
+            [ 0.15492231, 0.28176096 ],
+            [ 0.57665311, 0.14088063 ],
+            [ 0.06239935, 0.14591192 ],
+            [ 0.03442719, 0.0718778 ],
+            [ 0.03442719, 0.0718778 ],
+            [ 0.03388929, 0.07205749 ],
+            [ 0.03442719, 0.0718778 ],
+            [ 0.03442719, 0.0718778 ],
+            [ 0.03442719, 0.0718778 ],
+        ])
+
+    indices = get_topic_indices(topics, 3)
+
+    assert indices[0][0] == 1
+    assert indices[1][0] == 0
+
+def test_topic_indices_to_words():
+    vocab = [
+            'also',
+            'file',
+            'cat',
+            'sometimes',
+            'like',
+            'dog',
+            'still',
+            'filthy',
+            'animal'
+        ]
+
+    indices = [ [ 1, 0, 2 ], [ 0, 2, 1] ]
+
+    words = topic_indices_to_words(indices, vocab)
+
+    assert words[0][0] == vocab[indices[0][0]]
+    assert words[1][0] == vocab[indices[1][0]]
