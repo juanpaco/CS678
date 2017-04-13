@@ -334,6 +334,9 @@ def process_dataset(raw_data, random):
     topics = get_dem_topics(q, q_norm, anchors)
 
     topic_indices = get_topic_indices(topics, 10)
-    topic_words = topic_indices_to_words(topics, vocab_and_wordcounts['vocab'])
+    topic_words = topic_indices_to_words(
+            topic_indices,
+            vocab_and_wordcounts['vocab'],
+        )
 
     print(topic_words)
