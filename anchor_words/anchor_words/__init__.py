@@ -328,7 +328,7 @@ def process_dataset(raw_data, random):
     num_topics = 2
     projection_dimensions = 4
 
-    anchors = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
+    anchors, anchor_indices = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
 
     print('get the topics')
     topics = get_dem_topics(q, q_norm, anchors)
