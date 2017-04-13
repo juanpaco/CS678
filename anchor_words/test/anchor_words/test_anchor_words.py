@@ -4,6 +4,8 @@ import pytest
 from anchor_words import (
         build_vocab_and_wordcounts,
         build_q,
+        calculate_coherence,
+        calculate_coherences,
         down_project,
         get_dem_topics,
         get_topic_indices,
@@ -192,6 +194,8 @@ def test_get_dem_topics():
 
     topics = get_dem_topics(q, q_norm, anchors)
 
+    indices = get_topic_indices(topics, 3)
+
 def test_get_topic_indices():
     topics = numpy.array([
             [ 0.15492231, 0.28176096 ],
@@ -229,3 +233,35 @@ def test_topic_indices_to_words():
 
     assert words[0][0] == vocab[indices[0][0]]
     assert words[1][0] == vocab[indices[1][0]]
+
+def test_coherence():
+    wordcounts = [
+            {'by_word': {0: 1, 1: 1}, 'total': 2},
+            {'by_word': {1: 1}, 'total': 1},
+            {
+            'by_word': {2: 2, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
+            'total': 8,
+            }
+        ]
+
+    topic_indices = [1, 0, 2]
+
+    coherence = calculate_coherence(wordcounts, topic_indices)
+
+    assert coherence == pytest.approx(-10.4, abs=.01)
+
+def test_coherences():
+    wordcounts = [
+            {'by_word': {0: 1, 1: 1}, 'total': 2},
+            {'by_word': {1: 1}, 'total': 1},
+            {
+            'by_word': {2: 2, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
+            'total': 8,
+            }
+        ]
+
+    topic_indices = [[1, 0, 2], [0, 2, 1]]
+
+    coherences = calculate_coherences(wordcounts, topic_indices)
+
+    assert coherences[0] == pytest.approx(-10.4, abs=.01)

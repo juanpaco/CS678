@@ -1,4 +1,5 @@
 from functools import reduce 
+import math
 import numpy
 import scipy
 
@@ -339,4 +340,44 @@ def process_dataset(raw_data, random):
             vocab_and_wordcounts['vocab'],
         )
 
-    print(topic_words)
+    coherences = calculate_coherences(
+            vocab_and_wordcounts['wordcounts'],
+            topic_indices,
+        )
+
+    for i in range(len(topic_indices)):
+        print('--------------')
+        print(topic_words[i])
+        print(coherences[i])
+        print(topics[i])
+
+def calculate_coherences(wordcounts, topic_indices):
+    return [ calculate_coherence(wordcounts, topic) for topic in topic_indices ]
+
+def calculate_coherence(wordcounts, topic_indices):
+    coherence = 0
+
+    for i in range(len(topic_indices)):
+        for j in range(len(topic_indices)):
+            if i == j:
+                continue
+
+            def doc_contains_word(memo, word):
+                if word['by_word'].get(j, 0) > 0:
+                    return memo + 1
+                else:
+                    return memo
+
+            def doc_contains_both(memo, word):
+                if word['by_word'].get(j, 0) and word['by_word'].get(i, 0) > 0:
+                    return memo + 1
+                else:
+                    return memo
+
+            docs_with_j = reduce(doc_contains_word, wordcounts, 0)
+            docs_with_both = reduce(doc_contains_both, wordcounts, 0)
+
+            coherence += math.log((docs_with_both + .1) / docs_with_j)
+
+    return coherence
+
