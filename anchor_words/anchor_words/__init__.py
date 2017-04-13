@@ -317,7 +317,7 @@ def get_topic_indices(topics, count):
 def topic_indices_to_words(topics, vocab):
     return [ [ vocab[i] for i in topic ] for topic in topics ]
 
-def process_dataset(raw_data):
+def process_dataset(raw_data, random):
     print('vocab and wordcounts')
     vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
 
