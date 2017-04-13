@@ -325,8 +325,8 @@ def process_dataset(raw_data, random):
     q = build_q(vocab_and_wordcounts)
     q_norm = normalize_rows(q)
 
-    num_topics = 2
-    projection_dimensions = 4
+    num_topics = 100
+    projection_dimensions = 1000
 
     anchors, anchor_indices = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
 
