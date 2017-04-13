@@ -1,7 +1,6 @@
 from functools import reduce 
 import numpy
 import scipy
-from sklearn.preprocessing import normalize
 
 def reduce_file_vocab_and_wordcount(memo, document):
     by_word = {}
@@ -96,7 +95,6 @@ def down_project(matrix, target_dimenstions, random):
     return numpy.dot(matrix, r)
 
 def normalize_rows(matrix):
-    #return normalize(matrix, axis=1, norm='l1') 
     return matrix / matrix.sum(axis=1)[:, numpy.newaxis]
 
 def normalize_vector(vector):
@@ -319,10 +317,7 @@ def get_topic_indices(topics, count):
 def topic_indices_to_words(topics, vocab):
     return [ [ vocab[i] for i in topic ] for topic in topics ]
 
-def process_dataset(dataset_name):
-    print('Process', dataset_name)
-    raw_data = tokenize_dataset('test')
-
+def process_dataset(raw_data):
     print('vocab and wordcounts')
     vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
 
