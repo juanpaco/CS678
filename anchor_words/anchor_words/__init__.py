@@ -62,7 +62,10 @@ def build_q(vocab_and_wordcounts):
     #print('vocab', vocab)
     #print('h_tilde', h_tilde)
     #print('h_hat', h_hat)
-    return numpy.array(h_tilde * h_tilde.transpose() - numpy.diag(h_hat))
+    retval = numpy.array(h_tilde * h_tilde.transpose() - numpy.diag(h_hat))
+    retval[(-1e-15 < retval) & (retval < 0)] = 0
+
+    return retval
 
 lower_r_bound = 1/6
 next_r_bound = 1/3
@@ -195,7 +198,9 @@ def get_dem_topics(q, q_norm, anchor_words, epsilon=2e-7):
 
     normalization_constants = numpy.diag(q.sum(axis=1))
 
-    # Don't let there be zeroes?
+    for word in range(vocab_size):
+        if numpy.isnan(normalization_constants[word, word]):
+            normalization_constants[word, word] = 1e-16
 
     normalized_anchors = normalize_rows(anchor_words)
     normalized_anchors_square = numpy.dot(
