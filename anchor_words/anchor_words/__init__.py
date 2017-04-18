@@ -118,7 +118,24 @@ def project_vector_onto_vector(project_me, onto):
 
     return onto * (numerator / denominator)
 
-def select_anchors(q, q_norm, anchor_count, projection_dimensions, random):
+def get_candidate_anchor_words(vocab_and_wordcounts, doc_threshold):
+    # Go through the docs and make sure the words shows up in at least
+    #   doc_threshold documents
+    candidates = []
+    for word, token in enumerate(vocab_and_wordcounts['vocab']):
+        docs_found_in = 0
+        for document in vocab_and_wordcounts['wordcounts']:
+            print('doc', document)
+            if document['by_word'].get(word, False):
+                docs_found_in += 1
+
+            if (docs_found_in) >= doc_threshold:
+                candidates.append(word)
+                break
+
+    return candidates
+
+def select_anchors(vocab_and_wordcounts, q, q_norm, anchor_count, projection_dimensions, random):
     """ Selects the anchors from a normalized Q matrix.
 
     anchor_count is the number of anchors we want to find.
@@ -139,6 +156,9 @@ def select_anchors(q, q_norm, anchor_count, projection_dimensions, random):
       https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
       So, we'll implment that process.
     """
+
+    candidates = get_candidate_anchor_words(vocab_and_wordcounts, 50)
+    print(candidates)
    
     projected_q_norm = down_project(q_norm, projection_dimensions, random)
 
@@ -148,7 +168,8 @@ def select_anchors(q, q_norm, anchor_count, projection_dimensions, random):
     max_length = -1.0
     max_index = -1
 
-    for i in range(projected_q_norm.shape[0]):
+    # Finds the one closest to the origin
+    for i in candidates:
         length = numpy.dot(projected_q_norm[i], projected_q_norm[i])
 
         if (length > max_length):
@@ -171,7 +192,7 @@ def select_anchors(q, q_norm, anchor_count, projection_dimensions, random):
         max_length = -1.0
         max_index = -1
 
-        for i in range(1, projected_q_norm.shape[0]):
+        for i in candidates:
             if i not in anchors:
                 projected = project_vector_onto_vector(
                         projected_q_norm[i],
@@ -334,7 +355,7 @@ def process_dataset(raw_data, random):
     num_topics = 100
     projection_dimensions = 1000
 
-    anchors, anchor_indices = select_anchors(q, q_norm, num_topics, projection_dimensions, random)
+    anchors, anchor_indices = select_anchors(vocab_and_wordcounts, q, q_norm, num_topics, projection_dimensions, random)
 
     print('get the topics')
     topics = get_dem_topics(q, q_norm, anchors)
@@ -374,7 +395,7 @@ def calculate_coherence(wordcounts, topic_indices):
                     return memo
 
             def doc_contains_both(memo, word):
-                if word['by_word'].get(j, 0) and word['by_word'].get(i, 0) > 0:
+                if word['by_word'].get(j, 0) > 0 and word['by_word'].get(i, 0) > 0:
                     return memo + 1
                 else:
                     return memo

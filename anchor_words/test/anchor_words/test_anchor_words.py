@@ -7,6 +7,7 @@ from anchor_words import (
         calculate_coherence,
         calculate_coherences,
         down_project,
+        get_candidate_anchor_words,
         get_dem_topics,
         get_topic_indices,
         normalize_rows,
@@ -265,3 +266,21 @@ def test_coherences():
     coherences = calculate_coherences(wordcounts, topic_indices)
 
     assert coherences[0] == pytest.approx(-10.4, abs=.01)
+
+def test_get_candidate_anchor_words():
+    documents = [
+            [ 'this', 'is', 'data', 'this' ],
+            [ 'this', 'is', 'another' ],
+            [ 'cheese', 'will', 'another'],
+        ]
+
+    vocab_and_wordcounts = build_vocab_and_wordcounts(documents)
+
+    candidates = get_candidate_anchor_words(vocab_and_wordcounts, 2)
+
+    assert len(candidates) == 3
+    assert candidates[0] == 0
+
+    candidates = get_candidate_anchor_words(vocab_and_wordcounts, 10)
+
+    assert len(candidates) == 0
