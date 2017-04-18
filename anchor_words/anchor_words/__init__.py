@@ -348,6 +348,8 @@ def process_dataset(raw_data, random):
     print('vocab and wordcounts')
     vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
 
+    print('vocab_size', len(vocab_and_wordcounts['vocab']))
+
     print('build q')
     q = build_q(vocab_and_wordcounts)
     q_norm = normalize_rows(q)
@@ -359,6 +361,8 @@ def process_dataset(raw_data, random):
 
     print('get the topics')
     topics = get_dem_topics(q, q_norm, anchors)
+
+    print('first topic length', len(topics[0]))
 
     topic_indices = get_topic_indices(topics, 10)
     topic_words = topic_indices_to_words(
