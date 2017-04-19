@@ -125,7 +125,6 @@ def get_candidate_anchor_words(vocab_and_wordcounts, doc_threshold):
     for word, token in enumerate(vocab_and_wordcounts['vocab']):
         docs_found_in = 0
         for document in vocab_and_wordcounts['wordcounts']:
-            print('doc', document)
             if document['by_word'].get(word, False):
                 docs_found_in += 1
 
