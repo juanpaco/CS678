@@ -1,7 +1,11 @@
 from functools import reduce 
 import math
 import numpy
+import os.path
+import pickle
 import scipy
+
+from read_dataset import (tokenize_dataset)
 
 def reduce_file_vocab_and_wordcount(memo, document):
     by_word = {}
@@ -157,7 +161,7 @@ def select_anchors(vocab_and_wordcounts, q, q_norm, anchor_count, projection_dim
     """
 
     candidates = get_candidate_anchor_words(vocab_and_wordcounts, 50)
-    print(candidates)
+    print('candidates', candidates)
    
     projected_q_norm = down_project(q_norm, projection_dimensions, random)
 
@@ -343,17 +347,42 @@ def get_topic_indices(topics, count):
 def topic_indices_to_words(topics, vocab):
     return [ [ vocab[i] for i in topic ] for topic in topics ]
 
-def process_dataset(raw_data, random):
-    print('vocab and wordcounts')
-    vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
+def load_the_data(dataset_name):
+    dataset_pickle_name = dataset_name + '.pkl'
+
+    print('checking for pickle file', dataset_pickle_name)
+
+    if os.path.isfile(dataset_pickle_name):
+        print('we have it, just load that')
+
+        with open(dataset_pickle_name, 'rb') as f:
+            return pickle.load(f)
+    else:
+        print('we do not have it :(')
+
+        raw_data = tokenize_dataset(dataset_name)
+
+        print('vocab and wordcounts')
+        vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
+
+        print('save', dataset_pickle_name)
+        with open(dataset_pickle_name, 'wb') as f:
+            pickle.dump(vocab_and_wordcounts, f, pickle.HIGHEST_PROTOCOL)
+
+        return vocab_and_wordcounts
+
+def process_dataset(dataset_name, random):
+    vocab_and_wordcounts = load_the_data(dataset_name)
 
     print('vocab_size', len(vocab_and_wordcounts['vocab']))
 
     print('build q')
     q = build_q(vocab_and_wordcounts)
+
+    print('normalize q')
     q_norm = normalize_rows(q)
 
-    num_topics = 100
+    num_topics = 20
     projection_dimensions = 1000
 
     anchors, anchor_indices = select_anchors(vocab_and_wordcounts, q, q_norm, num_topics, projection_dimensions, random)
