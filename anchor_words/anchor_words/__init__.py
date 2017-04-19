@@ -374,7 +374,7 @@ def topic_indices_to_words(topics, vocab):
 
 def load_the_data(dataset_name, inclusion_threshold=1):
     print('load the data with threshold:', inclusion_threshold)
-    dataset_pickle_name = dataset_name + '.pkl'
+    dataset_pickle_name = '{}.{}.pkl'.format(dataset_name, inclusion_threshold)
 
     print('checking for pickle file', dataset_pickle_name)
 
