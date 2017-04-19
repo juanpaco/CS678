@@ -52,6 +52,11 @@ def build_vocab_and_wordcounts(documents, inclusion_threshold=1):
 
         wordcounts.append({ 'total': len(filtered_doc), 'by_word': by_word })
 
+    original_vocab_size = len(global_vocab_count)
+    print('Original vocab size', original_vocab_size)
+    print('Working vocab size', len(vocab))
+    print('Diff of:', original_vocab_size - len(vocab))
+
     return { 'vocab': vocab, 'wordcounts': wordcounts }
 
 def build_q(vocab_and_wordcounts):
@@ -424,6 +429,8 @@ def process_dataset(dataset_name, random, inclusion_threshold=1):
             vocab_and_wordcounts['wordcounts'],
             topic_indices,
         )
+
+    print('coherence sum', sum(coherences))
 
     for i in range(len(topic_indices)):
         print('--------------')
