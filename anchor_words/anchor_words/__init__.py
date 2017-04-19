@@ -414,9 +414,10 @@ def calculate_coherences(wordcounts, topic_indices):
 
 def calculate_coherence(wordcounts, topic_indices):
     coherence = 0
+    print('calculate_coherence', topic_indices)
 
-    for i in range(len(topic_indices)):
-        for j in range(len(topic_indices)):
+    for i in topic_indices:
+        for j in topic_indices:
             if i == j:
                 continue
 
