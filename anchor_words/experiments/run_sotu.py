@@ -5,4 +5,4 @@ from read_dataset import (tokenize_dataset)
 print('Process sotu')
 random = numpy.random.RandomState(1)
 
-process_dataset('sotu', random)
+process_dataset('sotu', random, inclusion_threshold=2)

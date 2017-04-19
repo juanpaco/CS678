@@ -9,11 +9,11 @@ from anchor_words import (
         down_project,
         get_candidate_anchor_words,
         get_dem_topics,
+        get_global_vocab_count,
         get_topic_indices,
         normalize_rows,
         normalize_vector,
         project_vector_onto_vector,
-        reduce_file_vocab_and_wordcount,
         select_anchors,
         topic_indices_to_words,
     )
@@ -33,6 +33,22 @@ def test_build_vocab_and_wordcounts():
     # Check the first doc for its count of 'this'
     assert vocab_and_wordcounts['wordcounts'][0]['by_word'][0] == 2
     assert vocab_and_wordcounts['wordcounts'][0]['total'] == 4
+
+def test_build_vocab_and_wordcounts_with_threshold():
+    documents = [
+            [ 'this', 'is', 'data', 'this' ],
+            [ 'this', 'is', 'another' ],
+        ]
+
+    vocab_and_wordcounts = build_vocab_and_wordcounts(documents, 2)
+
+    # only 2 words meet the threshold
+    assert len(vocab_and_wordcounts['vocab']) == 2
+
+    # Check the first doc for its count of 'this'
+    assert vocab_and_wordcounts['wordcounts'][0]['by_word'][0] == 2
+    # 'data' doesn't appear often enough to be retained
+    assert vocab_and_wordcounts['wordcounts'][0]['total'] == 3
 
 def test_build_q():
     documents = [
@@ -75,30 +91,6 @@ def test_another_build_q():
     assert q.shape == (vocab_length, vocab_length)
 
     assert q[0,0] == pytest.approx(1, abs=.001)
-
-def test_reduce_file_vocab_and_wordcount():
-    vocab_and_wordcounts = { 'vocab': [], 'wordcounts': [], 'seen_vocab': {} }
-
-    vocab_and_wordcounts = reduce_file_vocab_and_wordcount(
-            vocab_and_wordcounts,
-            [ 'this', 'is', 'data', 'this' ],
-        )
-
-    assert len(vocab_and_wordcounts['vocab']) == 3
-    assert vocab_and_wordcounts['seen_vocab']['data'] == 2
-    assert vocab_and_wordcounts['wordcounts'][0]['by_word'][0] == 2
-    assert vocab_and_wordcounts['wordcounts'][0]['total'] == 4
-
-    vocab_and_wordcounts = reduce_file_vocab_and_wordcount(
-            vocab_and_wordcounts,
-            [ 'this', 'is', 'another' ],
-        )
-
-    assert len(vocab_and_wordcounts['vocab']) == 4
-    assert vocab_and_wordcounts['seen_vocab']['another'] == 3
-    assert vocab_and_wordcounts['wordcounts'][1]['by_word'][0] == 1
-    assert vocab_and_wordcounts['wordcounts'][1]['by_word'][3] == 1
-    assert vocab_and_wordcounts['wordcounts'][1]['total'] == 3
 
 def test_down_project():
     random = numpy.random.RandomState(1)
@@ -284,3 +276,14 @@ def test_get_candidate_anchor_words():
     candidates = get_candidate_anchor_words(vocab_and_wordcounts, 10)
 
     assert len(candidates) == 0
+
+def test_get_global_vocab_count():
+    documents = [
+            [ 'this', 'is', 'data', 'this' ],
+            [ 'this', 'is', 'another' ],
+        ]
+
+    global_vocab_count = get_global_vocab_count(documents)
+
+    assert global_vocab_count['this'] == 3
+    assert global_vocab_count['another'] == 1

@@ -3,6 +3,7 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from os import listdir
 from os.path import isfile, join
+import pickle
 import string
 
 # path should be the name of a directory under "data"
@@ -16,7 +17,25 @@ def get_files_in_dataset(dataset_name):
 def tokenize_dataset(dataset_name):
     """Returns an iterator whose items are the tokenized files"""
 
-    return map(tokenize_file, get_files_in_dataset(dataset_name))
+    raw_data_pickle_file = dataset_name + '.raw.pkl'
+
+    print('checking for raw data:', raw_data_pickle_file)
+    if isfile(raw_data_pickle_file):
+        print('we have it, just use that')
+
+        with open(raw_data_pickle_file, 'rb') as f:
+            return pickle.load(f)
+    else:
+        print('we do not have it :(.  So load it')
+
+        raw_data = list(map(tokenize_file, get_files_in_dataset(dataset_name)))
+
+        print('save raw', raw_data_pickle_file)
+        with open(raw_data_pickle_file, 'wb') as f:
+            pickle.dump(raw_data, f, pickle.HIGHEST_PROTOCOL)
+
+        return raw_data
+
 
 def tokenize_file(path_to_file):
   """Takes a file path and returns a tokenized/lemmatized list"""

@@ -7,34 +7,52 @@ import scipy
 
 from read_dataset import (tokenize_dataset)
 
-def reduce_file_vocab_and_wordcount(memo, document):
-    by_word = {}
+def get_global_vocab_count(documents):
+    print('Getting global vocab counts')
 
-    for word in document:
-        #print('word', word)
-        if word not in memo['seen_vocab']:
-            memo['seen_vocab'][word] = len(memo['vocab'])
-            memo['vocab'].append(word)
+    global_vocab_count = {}
 
-        word_id = memo['seen_vocab'][word]
-        by_word[word_id] = by_word.get(word_id, 0) + 1
+    for document in documents:
+        for word in document:
+            global_vocab_count[word] = global_vocab_count.get(word, 0) + 1
 
-    wordcount = { 'total': len(document), 'by_word': by_word }
+    return global_vocab_count
 
-    memo['wordcounts'].append(wordcount)
+# A word must occur at least inclusion_threshold times in the corpus before
+#   being included in the vocab
+def build_vocab_and_wordcounts(documents, inclusion_threshold=1):
+    print('building vocab with threshold:', inclusion_threshold)
 
-    return memo
+    global_vocab_count = get_global_vocab_count(documents)
+    seen_vocab = {}
+    vocab = []
+    wordcounts = []
 
-def build_vocab_and_wordcounts(documents):
-    vocab_and_wordcounts = reduce(
-            reduce_file_vocab_and_wordcount,
-            documents,
-            { 'vocab': [], 'wordcounts': [], 'seen_vocab': {} }
-        )
+    print('Building vocab_and_word_counts.  Document count:', len(documents))
 
-    del vocab_and_wordcounts['seen_vocab']
+    # :'( Doing this in an imperative style.  I'm sorry, Haskell!
+    for document in documents:
+        by_word = {}
+        # This is the doc with only words not meeting the threshold
+        filtered_doc = []
 
-    return vocab_and_wordcounts
+        for word in document:
+            # Don't even consider it if we haven't seen it enough in the vocab
+            if global_vocab_count[word] < inclusion_threshold:
+                continue
+
+            filtered_doc.append(word)
+
+            if word not in seen_vocab:
+                seen_vocab[word] = len(vocab)
+                vocab.append(word)
+
+            word_id = seen_vocab[word]
+            by_word[word_id] = by_word.get(word_id, 0) + 1
+
+        wordcounts.append({ 'total': len(filtered_doc), 'by_word': by_word })
+
+    return { 'vocab': vocab, 'wordcounts': wordcounts }
 
 def build_q(vocab_and_wordcounts):
     vocab = vocab_and_wordcounts['vocab']
@@ -213,6 +231,8 @@ def select_anchors(vocab_and_wordcounts, q, q_norm, anchor_count, projection_dim
         anchors.append(max_index)
         projection_basis = normalize_vector(projected_q_norm[max_index])
 
+    print('anchors', anchors)
+
     return q[anchors, :], anchors
 
 def get_dem_topics(q, q_norm, anchor_words, epsilon=2e-7):
@@ -347,7 +367,8 @@ def get_topic_indices(topics, count):
 def topic_indices_to_words(topics, vocab):
     return [ [ vocab[i] for i in topic ] for topic in topics ]
 
-def load_the_data(dataset_name):
+def load_the_data(dataset_name, inclusion_threshold=1):
+    print('load the data with threshold:', inclusion_threshold)
     dataset_pickle_name = dataset_name + '.pkl'
 
     print('checking for pickle file', dataset_pickle_name)
@@ -360,10 +381,10 @@ def load_the_data(dataset_name):
     else:
         print('we do not have it :(')
 
+        print('load raw data')
         raw_data = tokenize_dataset(dataset_name)
 
-        print('vocab and wordcounts')
-        vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data)
+        vocab_and_wordcounts = build_vocab_and_wordcounts(raw_data, inclusion_threshold=inclusion_threshold)
 
         print('save', dataset_pickle_name)
         with open(dataset_pickle_name, 'wb') as f:
@@ -371,8 +392,9 @@ def load_the_data(dataset_name):
 
         return vocab_and_wordcounts
 
-def process_dataset(dataset_name, random):
-    vocab_and_wordcounts = load_the_data(dataset_name)
+def process_dataset(dataset_name, random, inclusion_threshold=1):
+    print('inclusion threshold:', inclusion_threshold)
+    vocab_and_wordcounts = load_the_data(dataset_name, inclusion_threshold=inclusion_threshold)
 
     print('vocab_size', len(vocab_and_wordcounts['vocab']))
 
@@ -407,7 +429,6 @@ def process_dataset(dataset_name, random):
         print('--------------')
         print(topic_words[i])
         print(coherences[i])
-        print(topics[i])
 
 def calculate_coherences(wordcounts, topic_indices):
     return [ calculate_coherence(wordcounts, topic) for topic in topic_indices ]
